@@ -16,6 +16,37 @@ interface IArea {
     total?: number,
 }
 
+interface IRibbon {
+    perim: number,
+    volume: number,
+    total?: number,
+}
+
+
+function getSmallestPerim(box: IBox){
+    // Get the smallest perimeter
+    let perim = Math.min(
+        (box.l + box.w),
+        (box.w + box.h),
+        (box.l + box.h),
+    ) * 2;
+    return perim;
+}
+
+function getVolume(box: IBox){
+    let volume = box.l * box.w * box.h;
+    return volume;
+}
+
+function calcRibbon(box: IBox): IRibbon {
+    let result: IRibbon = {
+        perim: getSmallestPerim(box),
+        volume: getVolume(box),
+    };
+    result.total = result.perim + result.volume;
+    return result;
+}
+
 
 function calcAreaBase(box: IBox): IArea {
     let result: IArea = {
@@ -54,15 +85,36 @@ function inputToBoxes(input: string): IBox[] {
     return boxes;
 }
 
-let boxes = inputToBoxes(getInput());
-let areas: IArea[] = boxes.map(b => calcAreaBase(b))
-    .map(a => calcAreaTotal(a));
-let totalArea = areas.map(a => a.total)
-    .reduce((acc, a) => {
-        return (acc + a);
-    }, 0);
 
-console.log('totalArea=', totalArea);
+function calcAreaAndRibbon(boxes: IBox[]){
+    let areas: IArea[] = boxes.map(b => calcAreaBase(b))
+        .map(a => calcAreaTotal(a));
+    let totalArea = areas.map(a => a.total)
+        .reduce((acc, a) => {
+            return (acc + a);
+        }, 0);
+    
+    let ribbon: IRibbon[] = boxes.map(box => calcRibbon(box))
+    let totalRibbon = ribbon.reduce(
+        (acc, r) => {
+            return (acc + r.total);
+        },
+        0
+    );
+    
+    let result = {
+        area: totalArea,
+        ribbon: totalRibbon,
+    };
+    return result;
+}
+
+
+let boxes = inputToBoxes(getInput());
+let result = calcAreaAndRibbon(boxes);
+
+console.log('totalArea=', result.area);
+console.log('ribbon=', result.ribbon);
 
 
 // Put inside a function so it gets hoisted to the top of the scope.
