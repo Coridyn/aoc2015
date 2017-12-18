@@ -7,47 +7,68 @@ interface IHouseMap {
 interface IPoint {
     x: number,
     y: number,
+    houses: IHouseMap,
 }
 
-function visit(pos: IPoint, houses: IHouseMap){
+function visit(pos: IPoint){
     let id = `${pos.x},${pos.y}`;
+    
+    let houses = pos.houses;
     houses[id] = houses[id] ? houses[id] + 1 : 1;
 }
 
 
-function traverse(directions: string, houses: IHouseMap){
-    let pos = {
-        x: 0,
-        y: 0,
-    };
-    
-    // Visit starting house
-    visit(pos, houses);
-    
-    for (var c of directions){
-        switch (c){
-            case '^':
-                pos.y--;
-                break;
-                
-            case '>':
-                pos.x++;
-                break;
+function updatePos(direction: string, pos: IPoint){
+    switch (direction){
+        case '^':
+            pos.y--;
+            break;
             
-            case 'v':
-                pos.y++;
-                break;
-            
-            case '<':
-                pos.x--;
-                break;
-        }
+        case '>':
+            pos.x++;
+            break;
         
-        // Visit new house
-        visit(pos, houses);
+        case 'v':
+            pos.y++;
+            break;
+        
+        case '<':
+            pos.x--;
+            break;
     }
     
-    return houses;
+    return pos;
+}
+
+
+function traverse(directions: string){
+    let posList: IPoint[] = [
+        {
+            x: 0,
+            y: 0,
+            houses: {},
+        },
+        {
+            x: 0,
+            y: 0,
+            houses: {},
+        } 
+    ];
+    
+    // Visit starting houses
+    posList.forEach(pos => visit(pos));
+    
+    let posCount = posList.length;
+    for (let i = 0; i < directions.length; i++){
+        let c = directions.charAt(i);
+        let pos = posList[i % posCount];
+        
+        // Update position and visit new house
+        updatePos(c, pos);
+        visit(pos);
+    }
+    
+    return posList;
 }
 
 function countVisits(houses: IHouseMap){
@@ -57,9 +78,20 @@ function countVisits(houses: IHouseMap){
 
 
 // Maps a house id to the number of visits
-let presentMap: IHouseMap = {};
 // NOTE: This mutates `presentMap`
-traverse(getInput(), presentMap);
+let posList: IPoint[] = traverse(getInput());
+// Merge map of houses together.
+let presentMap = posList.reduce(
+    (acc, pos) => {
+        // Merge pos values onto `acc`
+        for (let [key, value] of Object.entries(pos.houses)){
+            acc[key] = acc[key] || 0;
+            acc[key] += value;
+        }
+        return acc;
+    },
+    {}
+);
 let count = countVisits(presentMap);
 console.log('count=', count);
 
